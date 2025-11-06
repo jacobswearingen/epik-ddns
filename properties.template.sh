@@ -1,5 +1,5 @@
 # domain-specific API key
 EPIK_SIGNATURE=
 
-# subdomain or root, e.g. @
+# subdomains and/or root, e.g. ( @ "*" www mumble )
 EPIK_HOSTNAMES=()
