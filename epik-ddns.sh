@@ -106,26 +106,29 @@ fi
 _current_time="$(date +%s)"
 
 function postUpdateAndExit() {
-    local _response _response_error
+    local _response _response_error _hostname
 
-    # API call
-    _response="$(curl -LSsX 'POST' --fail-with-body \
-        "https://usersapiv2.epik.com/v2/ddns/set-ddns?SIGNATURE=$EPIK_SIGNATURE" \
-        -H 'Accept: application/json' \
-        -H 'Content-Type: application/json' \
-        -d "{
-            \"hostname\": \"$EPIK_HOSTNAME\",
-            \"value\": \"$_wan_ip\"
-        }")"
+    for _hostname in "${EPIK_HOSTNAMES[@]}"; do
+        # API call
+        _response="$(curl -LSsX 'POST' --fail-with-body \
+            "https://usersapiv2.epik.com/v2/ddns/set-ddns?SIGNATURE=$EPIK_SIGNATURE" \
+            -H 'Accept: application/json' \
+            -H 'Content-Type: application/json' \
+            -d "{
+                    \"hostname\": \"$_hostname\",
+                    \"value\": \"$_wan_ip\"
+                }")"
+        # check for server errors
+        _response_error="$(jq -r '.errors[0] | .description' <<<"$_response")"
+        if [[ $_response_error != null ]]; then
+            echo "Error updating $_hostname: $_response_error" >&2
+            exit 1
+        else
+            echo "Updated $_hostname → $_wan_ip"
+        fi
+    done
 
-    # check for server errors
-    _response_error="$(jq -r '.errors[0] | .description' <<<"$_response")"
-    if [[ $_response_error != null ]]; then
-        echo "$_response_error" >&2
-        exit 1
-    fi
-
-    # update WAN IP cache
+    # update WAN IP cache (shared for all hostnames)
     if ! printf '%s %s' "$_current_time" "$_wan_ip" >"$EPIK_DDNS_CACHE_TXT"; then
         echo 'failed to write WAN IP cache' >&2
         exit 1
