@@ -81,8 +81,8 @@ if [[ -z $EPIK_SIGNATURE ]]; then
     echo 'EPIK_SIGNATURE not set' >&2
     exit 1
 fi
-if [[ -z $EPIK_HOSTNAME ]]; then
-    echo 'EPIK_HOSTNAME not set' >&2
+if [[ -z $EPIK_HOSTNAMES ]]; then
+    echo 'EPIK_HOSTNAMES not set' >&2
     exit 1
 fi
 
@@ -108,6 +108,7 @@ _current_time="$(date +%s)"
 function postUpdateAndExit() {
     local _response _response_error _hostname
 
+    echo $EPIK_HOSTNAMES
     for _hostname in "${EPIK_HOSTNAMES[@]}"; do
         # API call
         _response="$(curl -LSsX 'POST' --fail-with-body \
@@ -118,15 +119,16 @@ function postUpdateAndExit() {
                     \"hostname\": \"$_hostname\",
                     \"value\": \"$_wan_ip\"
                 }")"
-        # check for server errors
-        _response_error="$(jq -r '.errors[0] | .description' <<<"$_response")"
-        if [[ $_response_error != null ]]; then
-            echo "Error updating $_hostname: $_response_error" >&2
-            exit 1
-        else
-            echo "Updated $_hostname → $_wan_ip"
-        fi
-    done
+                # check for server errors
+                echo $_response
+                _response_error="$(jq -r '.errors[0] | .description' <<<"$_response")"
+                if [[ $_response_error != null ]]; then
+                    echo "Error updating $_hostname: $_response_error" >&2
+                    exit 1
+                else
+                    echo "Updated $_hostname → $_wan_ip"
+                fi
+            done
 
     # update WAN IP cache (shared for all hostnames)
     if ! printf '%s %s' "$_current_time" "$_wan_ip" >"$EPIK_DDNS_CACHE_TXT"; then
