@@ -2,4 +2,4 @@
 EPIK_SIGNATURE=
 
 # subdomain or root, e.g. @
-EPIK_HOSTNAME=
+EPIK_HOSTNAMES=()
