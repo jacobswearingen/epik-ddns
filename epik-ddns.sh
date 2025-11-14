@@ -118,17 +118,17 @@ function postUpdateAndExit() {
 			-d "{
 					\"hostname\": \"$_hostname\",
 					\"value\": \"$_wan_ip\"
-				}")"
-				# check for server errors
-				echo $_response
-				_response_error="$(jq -r '.errors[0] | .description' <<<"$_response")"
-				if [[ $_response_error != null ]]; then
-					echo "Error updating $_hostname: $_response_error" >&2
-					exit 1
-				else
-					echo "Updated $_hostname → $_wan_ip"
-				fi
-			done
+		}")"
+		# check for server errors
+		echo $_response
+		_response_error="$(jq -r '.errors[0] | .description' <<<"$_response")"
+		if [[ $_response_error != null ]]; then
+			echo "Error updating $_hostname: $_response_error" >&2
+			exit 1
+		else
+			echo "Updated $_hostname → $_wan_ip"
+		fi
+	done
 
 	# update WAN IP cache (shared for all hostnames)
 	if ! printf '%s %s' "$_current_time" "$_wan_ip" >"$EPIK_DDNS_CACHE_TXT"; then
